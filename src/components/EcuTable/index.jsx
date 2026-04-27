@@ -1,7 +1,7 @@
 import { ECU_TABLE_COLUMNS } from './columnConfig';
 import EcuTableRow from './EcuTableRow';
 
-const HEADER_COLOR = '#1a4a6e';
+const HEADER_COLOR = '#243882';
 const TH = 'px-3 py-2.5 text-left text-white font-semibold text-sm whitespace-nowrap';
 
 /**

@@ -17,8 +17,10 @@ export function parseDTCsFromVSR(htmlText) {
   const rows = table.querySelectorAll('tbody tr');
 
   rows.forEach((row) => {
-    // Skip header rows (contain <th>) and the "Expand All" link row
-    if (row.querySelector('th')) return;
+    // Skip the header row (direct <th> children) and the "Expand All" link row.
+    // Must use :scope > th — nested env-data tables also have <th> elements,
+    // so a plain querySelector('th') would incorrectly drop every data row.
+    if (row.querySelector(':scope > th')) return;
     if (row.querySelector('.envDataLinkRow')) return;
 
     const cells = row.querySelectorAll('td');

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx vite *)",
+      "Bash(npm list *)",
+      "Bash(npm install *)",
+      "Bash(curl -s http://localhost:5173)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(awk '{print $9}')",
+      "Bash(pkill -f \"vite\")",
+      "Bash(node_modules/.bin/vite build *)",
+      "Bash(curl -sI http://localhost:5173)",
+      "WebFetch(domain:www.stellantis.com)",
+      "Bash(curl -s https://www.stellantis.com/)",
+      "Bash(curl -s -A \"Mozilla/5.0\" https://www.stellantis.com/)",
+      "Bash(curl -s \"https://www.stellantis.com/\")",
+      "Bash(curl -sL \"https://www.stellantis.com/content/dam/stellantis-corporate/assets/stell-logo-blue.svg\" -o /Users/219610/Documents/claude-workspace/stla-ai-poc/public/stellantis-logo.svg)"
+    ]
+  }
+}

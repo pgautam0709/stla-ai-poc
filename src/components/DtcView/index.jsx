@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const HEADER_BG = '#1a4a6e';
+const HEADER_BG = '#243882';
 const GREEN_BG = '#4a7c2f';
 
 const MAIN_COLS = [
@@ -94,6 +94,7 @@ function ExpandedDetails({ lookup }) {
 function DtcRow({ dtc, lookup, isOdd }) {
   const [expanded, setExpanded] = useState(false);
   const rowBg = isOdd ? 'bg-gray-50' : 'bg-white';
+  const hasLookup = !!lookup;
 
   return (
     <>
@@ -103,17 +104,23 @@ function DtcRow({ dtc, lookup, isOdd }) {
 
         {/* DTC Code with expand toggle */}
         <td className="px-3 py-2 text-sm border-b border-gray-200 whitespace-nowrap">
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="inline-flex items-center gap-1.5 group"
-            aria-expanded={expanded}
-            aria-label={`${expanded ? 'Collapse' : 'Expand'} details for ${dtc.dtcCode}`}
-          >
-            <span className="w-5 h-5 flex items-center justify-center border border-gray-400 rounded text-xs font-bold text-gray-600 group-hover:bg-gray-100 transition-colors">
+          <div className="inline-flex items-center gap-1.5">
+            <button
+              onClick={() => hasLookup && setExpanded((v) => !v)}
+              disabled={!hasLookup}
+              className={[
+                'w-5 h-5 flex items-center justify-center border rounded text-xs font-bold transition-colors',
+                hasLookup
+                  ? 'border-gray-400 text-gray-600 hover:bg-gray-100 cursor-pointer'
+                  : 'border-gray-200 text-gray-300 cursor-not-allowed',
+              ].join(' ')}
+              aria-expanded={hasLookup ? expanded : undefined}
+              aria-label={hasLookup ? `${expanded ? 'Collapse' : 'Expand'} details for ${dtc.dtcCode}` : `No DTC details available for ${dtc.dtcCode}`}
+            >
               {expanded ? '−' : '+'}
-            </span>
+            </button>
             <span className="font-mono text-blue-700">{dtc.dtcCode}</span>
-          </button>
+          </div>
         </td>
 
         {/* Details / Description */}
