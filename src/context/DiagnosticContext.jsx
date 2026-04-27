@@ -5,8 +5,11 @@ const initialState = {
   vehicleInfo: null,
   ecus: [],
   compareData: {},
+  dtcs: [],
+  dtcLookup: {},
   vsrFileName: '',
   compareFileName: '',
+  dtcFileName: '',
   loading: '',
   error: '',
 };
@@ -16,8 +19,11 @@ export const ACTIONS = {
   SET_VEHICLE_INFO: 'SET_VEHICLE_INFO',
   SET_ECUS: 'SET_ECUS',
   SET_COMPARE_DATA: 'SET_COMPARE_DATA',
+  SET_DTCS: 'SET_DTCS',
+  SET_DTC_LOOKUP: 'SET_DTC_LOOKUP',
   SET_VSR_FILENAME: 'SET_VSR_FILENAME',
   SET_COMPARE_FILENAME: 'SET_COMPARE_FILENAME',
+  SET_DTC_FILENAME: 'SET_DTC_FILENAME',
   SET_LOADING: 'SET_LOADING',
   SET_ERROR: 'SET_ERROR',
   CLEAR_ERROR: 'CLEAR_ERROR',
@@ -33,10 +39,16 @@ function diagnosticReducer(state, action) {
       return { ...state, ecus: action.payload };
     case ACTIONS.SET_COMPARE_DATA:
       return { ...state, compareData: action.payload };
+    case ACTIONS.SET_DTCS:
+      return { ...state, dtcs: action.payload };
+    case ACTIONS.SET_DTC_LOOKUP:
+      return { ...state, dtcLookup: action.payload };
     case ACTIONS.SET_VSR_FILENAME:
       return { ...state, vsrFileName: action.payload };
     case ACTIONS.SET_COMPARE_FILENAME:
       return { ...state, compareFileName: action.payload };
+    case ACTIONS.SET_DTC_FILENAME:
+      return { ...state, dtcFileName: action.payload };
     case ACTIONS.SET_LOADING:
       return { ...state, loading: action.payload, error: '' };
     case ACTIONS.SET_ERROR:
