@@ -85,38 +85,101 @@ function isDtcFile(filename) {
 }
 
 /**
- * Parses a DTC Excel file using the same column layout as dtcLookupParser.js:
- *   Row 0  — title
- *   Row 1  — column headers
- *   Row 2  — sub-headers
- *   Row 3+ — data
- *   Col 1  — J2012 DTC code (key)
- *   Col 6  — Self Healing Criteria
- *   Col 16 — Repair Action
- *   Col 17 — Enable Conditions
- *   Col 23 — Dematuration Criteria
- *   Col 25 — Limp-in Action
+ * Scans the first maxRows rows to find which row + column contains the J2012
+ * DTC code header (e.g. "J2012 FORMAT", "J2012 Format").
+ */
+function findJ2012Loc(rows, maxRows = 6) {
+  for (let r = 0; r < Math.min(maxRows, rows.length); r++) {
+    if (!rows[r]) continue;
+    for (let c = 0; c < rows[r].length; c++) {
+      if (String(rows[r][c] || '').toUpperCase().includes('J2012')) {
+        return { row: r, col: c };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Searches headerRow and the row above it for a column whose header contains
+ * any of the given keywords (case-insensitive substring match).
+ */
+function findColByKeyword(rows, headerRow, ...keywords) {
+  const kws = keywords.map(k => k.toUpperCase());
+  for (const r of [headerRow, headerRow - 1].filter(r => r >= 0)) {
+    if (!rows[r]) continue;
+    for (let c = 0; c < rows[r].length; c++) {
+      const val = String(rows[r][c] || '').toUpperCase();
+      if (kws.some(kw => val.includes(kw))) return c;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Parses a DTC Excel file — handles any column layout and multiple sheets.
+ *
+ * Auto-detects the J2012 code column and all data columns by scanning headers,
+ * so it works with the original single-sheet DTC.xlsx as well as consolidated
+ * multi-sheet files (BCM, MCPA, ADCAM, etc.) that have different layouts.
+ *
+ * Falls back to fixed indices (col 1 / rows from 3) for the legacy format where
+ * "J2012" doesn't appear in the header at all.
  */
 function parseDtcXlsx(filePath) {
   const workbook = XLSX.readFile(filePath);
-  const sheet    = workbook.Sheets[workbook.SheetNames[0]];
-  const rows     = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+  const lookup   = {};
 
-  const lookup = {};
-  for (let i = 3; i < rows.length; i++) {
-    const row   = rows[i];
-    const j2012 = row[1];
-    if (!j2012 || typeof j2012 !== 'string') continue;
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const rows  = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-    const key = j2012.trim().toUpperCase();
-    lookup[key] = {
-      selfHealingCriteria: row[6]  ?? '',
-      repairAction:        row[16] ?? '',
-      enableCondition:     row[17] ?? '',
-      dematureCriteria:    row[23] ?? '',
-      limpInAction:        row[25] ?? '',
-    };
+    // ── Find the J2012 header to determine key column + data start row ─────
+    const j2012Loc = findJ2012Loc(rows);
+
+    let j2012Col, dataStartRow;
+    if (j2012Loc) {
+      j2012Col     = j2012Loc.col;
+      dataStartRow = j2012Loc.row + 1;
+    } else {
+      // Legacy format: fixed layout (col 1, data from row 3)
+      if (workbook.SheetNames.length > 1) continue; // skip non-DTC sheets
+      j2012Col     = 1;
+      dataStartRow = 3;
+    }
+
+    // ── Auto-detect other columns by keyword ───────────────────────────────
+    const headerRow    = dataStartRow - 1;
+    const selfHealCol  = findColByKeyword(rows, headerRow, 'SELF HEAL', 'SELF_HEAL');
+    const repairCol    = findColByKeyword(rows, headerRow, 'REPAIR');
+    const enableCol    = findColByKeyword(rows, headerRow, 'ENABLE COND', 'ENABLE_COND');
+    const dematureCol  = findColByKeyword(rows, headerRow, 'DE-MAT', 'DE_MAT', 'DE MAT', 'DEMATR');
+    const limpInCol    = findColByKeyword(rows, headerRow, 'LIMP');
+
+    let sheetDtcCount = 0;
+    for (let i = dataStartRow; i < rows.length; i++) {
+      const row   = rows[i];
+      const j2012 = row?.[j2012Col];
+      if (!j2012 || typeof j2012 !== 'string') continue;
+      const key = j2012.trim().toUpperCase();
+      // Must look like a valid DTC code (letter + 4 hex digits)
+      if (!/^[UPBC][0-9A-Fa-f]{4}/.test(key)) continue;
+
+      lookup[key] = {
+        selfHealingCriteria: selfHealCol >= 0  ? String(row[selfHealCol]  ?? '') : '',
+        repairAction:        repairCol   >= 0  ? String(row[repairCol]    ?? '') : '',
+        enableCondition:     enableCol   >= 0  ? String(row[enableCol]    ?? '') : '',
+        dematureCriteria:    dematureCol >= 0  ? String(row[dematureCol]  ?? '') : '',
+        limpInAction:        limpInCol   >= 0  ? String(row[limpInCol]    ?? '') : '',
+      };
+      sheetDtcCount++;
+    }
+
+    if (sheetDtcCount > 0) {
+      console.log(`   📋 Sheet "${sheetName}": ${sheetDtcCount} DTCs`);
+    }
   }
+
   return lookup;
 }
 
@@ -161,7 +224,7 @@ async function processDtcFile(filePath) {
     const count  = Object.keys(lookup).length;
 
     if (count === 0) {
-      throw new Error('No DTC codes found — check that column layout matches expected format (J2012 code in col 1, data rows from row 3).');
+      throw new Error('No DTC codes found — file must have a column header containing "J2012" and valid DTC codes (e.g. B128E-92) in that column.');
     }
 
     const outputPath = writeDtcModule(filename, lookup);
