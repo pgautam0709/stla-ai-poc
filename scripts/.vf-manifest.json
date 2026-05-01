@@ -1,0 +1,15 @@
+{
+  "DTC.xlsx::59630": {
+    "filename": "DTC.xlsx",
+    "size": 59630,
+    "processedAt": "2026-05-01T14:24:01.428Z",
+    "outputFile": "src/data/dtc-auto/DTC.js",
+    "dtcCount": 79
+  },
+  "VF560_V3_R3_PEJ28.doc::1345536": {
+    "filename": "VF560_V3_R3_PEJ28.doc",
+    "size": 1345536,
+    "processedAt": "2026-05-01T14:24:22.341Z",
+    "outputFile": "src/knowledge/auto/VF560_V3_R3_PEJ28.js"
+  }
+}

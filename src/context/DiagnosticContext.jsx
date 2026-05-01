@@ -21,6 +21,7 @@ export const ACTIONS = {
   SET_COMPARE_DATA: 'SET_COMPARE_DATA',
   SET_DTCS: 'SET_DTCS',
   SET_DTC_LOOKUP: 'SET_DTC_LOOKUP',
+  MERGE_DTC_LOOKUP: 'MERGE_DTC_LOOKUP',
   SET_VSR_FILENAME: 'SET_VSR_FILENAME',
   SET_COMPARE_FILENAME: 'SET_COMPARE_FILENAME',
   SET_DTC_FILENAME: 'SET_DTC_FILENAME',
@@ -43,6 +44,8 @@ function diagnosticReducer(state, action) {
       return { ...state, dtcs: action.payload };
     case ACTIONS.SET_DTC_LOOKUP:
       return { ...state, dtcLookup: action.payload };
+    case ACTIONS.MERGE_DTC_LOOKUP:
+      return { ...state, dtcLookup: { ...state.dtcLookup, ...action.payload } };
     case ACTIONS.SET_VSR_FILENAME:
       return { ...state, vsrFileName: action.payload };
     case ACTIONS.SET_COMPARE_FILENAME:

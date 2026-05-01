@@ -15,7 +15,8 @@
       "Bash(curl -s https://www.stellantis.com/)",
       "Bash(curl -s -A \"Mozilla/5.0\" https://www.stellantis.com/)",
       "Bash(curl -s \"https://www.stellantis.com/\")",
-      "Bash(curl -sL \"https://www.stellantis.com/content/dam/stellantis-corporate/assets/stell-logo-blue.svg\" -o /Users/219610/Documents/claude-workspace/stla-ai-poc/public/stellantis-logo.svg)"
+      "Bash(curl -sL \"https://www.stellantis.com/content/dam/stellantis-corporate/assets/stell-logo-blue.svg\" -o /Users/219610/Documents/claude-workspace/stla-ai-poc/public/stellantis-logo.svg)",
+      "Bash(python3 '/Users/219610/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/d0eaddda-89b6-4146-8a96-6ca8e8e440e7/be1f5300-9237-4db2-a5b8-a00c40b98dcf/skills/docx/scripts/office/soffice.py' --headless --convert-to docx /Users/219610/Documents/claude-workspace/stla-ai-poc/public/VF179_V14_R2_PEJ28.doc --outdir /tmp/doc_convert/)"
     ]
   }
 }

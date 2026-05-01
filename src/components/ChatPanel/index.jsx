@@ -286,14 +286,14 @@ function useAutoGrow(ref, value) {
 
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
-export default function ChatPanel({ vehicleInfo, dtcs, dtcLookup }) {
+export default function ChatPanel({ vehicleInfo, dtcs, dtcLookup, ecus }) {
   const [input, setInput] = useState('');
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
   useAutoGrow(inputRef, input);
 
   const { messages, streaming, error, configured, sendMessage, stop, reset } =
-    useAzureChat({ vehicleInfo, dtcs, dtcLookup });
+    useAzureChat({ vehicleInfo, dtcs, dtcLookup, ecus });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

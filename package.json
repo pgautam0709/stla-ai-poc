@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "process-vf": "node scripts/vf-processor.js",
+    "dev:full": "concurrently -n \"vite,vf-proc\" -c \"blue,green\" \"npm run dev\" \"npm run process-vf\""
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -17,8 +19,13 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.17",
+    "chokidar": "^5.0.0",
+    "concurrently": "^9.2.1",
+    "dotenv": "^17.4.2",
+    "mammoth": "^1.12.0",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
-    "vite": "^5.0.8"
+    "vite": "^5.0.8",
+    "word-extractor": "^1.0.4"
   }
 }

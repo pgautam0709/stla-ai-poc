@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { VEHICLE_FUNCTION_KNOWLEDGE } from '../knowledge/index';
 
 const ENDPOINT   = (import.meta.env.VITE_AZURE_OPENAI_ENDPOINT || '').replace(/\/$/, '');
 const API_KEY    = import.meta.env.VITE_AZURE_OPENAI_KEY;
@@ -7,7 +8,7 @@ const API_VERSION = import.meta.env.VITE_AZURE_OPENAI_API_VERSION || '2024-02-01
 
 const DTC_PATTERN = /[UPBC]\d{4}(?:-\d{2})?/gi;
 
-function buildSystemPrompt(vehicleInfo, dtcs) {
+function buildSystemPrompt(vehicleInfo, dtcs, ecus) {
   let prompt = `You are DTC Expert, an AI assistant specialized in Chrysler/Stellantis vehicle diagnostics (Chrysler, Dodge, Jeep, Ram, Fiat, Alfa Romeo).
 
 You have deep expertise in:
@@ -41,7 +42,9 @@ Example closing format:
 
 > Would you like me to walk you through the specific drive cycle conditions needed to verify this repair?
 
-Keep the follow-up question concise and grounded in the current vehicle context. Never repeat the same question twice in a conversation.`;
+Keep the follow-up question concise and grounded in the current vehicle context. Never repeat the same question twice in a conversation.
+
+${VEHICLE_FUNCTION_KNOWLEDGE}`;
 
   if (vehicleInfo?.vin) {
     prompt += `\n\nCurrent Vehicle on Screen:`;
@@ -56,6 +59,21 @@ Keep the follow-up question concise and grounded in the current vehicle context.
     prompt += dtcs
       .map(d => `- ${d.dtcCode} [${d.ecu}] ${d.description ? '— ' + d.description : ''} (${d.status})`)
       .join('\n');
+  }
+
+  if (ecus?.length > 0) {
+    const hasCompare = ecus.some(e => e.latestSwVersion || e.latestPartNumber);
+    prompt += `\n\nECU Software Inventory from VSR (${ecus.length} ECUs):`;
+    prompt += `\nColumns: ECU Name | Current Part No. | Current SW Version | Latest Part No. | Latest SW Version | DRE | Up-to-date?`;
+    prompt += `\n` + ecus.map(e => {
+      const swMatch  = !e.latestSwVersion  || e.swVersion  === e.latestSwVersion;
+      const pnMatch  = !e.latestPartNumber || e.partNumber === e.latestPartNumber;
+      const upToDate = hasCompare ? (swMatch && pnMatch ? 'YES' : 'NO') : 'N/A';
+      return `- ${e.ecuName} | ${e.partNumber || '—'} | ${e.swVersion || '—'} | ${e.latestPartNumber || '—'} | ${e.latestSwVersion || '—'} | ${e.dre || '—'} | ${upToDate}`;
+    }).join('\n');
+    if (!hasCompare) {
+      prompt += `\n(Compare table not loaded — Latest PN/SW columns unavailable. Load CompareTable.xlsx to enable up-to-date analysis.)`;
+    }
   }
 
   return prompt;
@@ -85,7 +103,7 @@ function formatDTCContext(matches) {
   return lines.join('\n');
 }
 
-export function useAzureChat({ vehicleInfo, dtcs, dtcLookup }) {
+export function useAzureChat({ vehicleInfo, dtcs, dtcLookup, ecus }) {
   const [messages, setMessages] = useState([{
     role: 'assistant',
     content: `Hello! I'm **Stella_Assist**, your dedicated Chrysler/Stellantis diagnostic expert.
@@ -122,7 +140,7 @@ I can help you with:
     setError('');
     setStreaming(true);
 
-    const systemPrompt = buildSystemPrompt(vehicleInfo, dtcs);
+    const systemPrompt = buildSystemPrompt(vehicleInfo, dtcs, ecus);
     const apiMessages = [
       { role: 'system', content: systemPrompt },
       ...messages.map(m => ({ role: m.role, content: m.content })),
@@ -183,7 +201,7 @@ I can help you with:
     } finally {
       setStreaming(false);
     }
-  }, [configured, messages, streaming, vehicleInfo, dtcs, dtcLookup]);
+  }, [configured, messages, streaming, vehicleInfo, dtcs, dtcLookup, ecus]);
 
   const stop = useCallback(() => {
     abortRef.current?.abort();

@@ -130,7 +130,7 @@ export default function App() {
 
       {/* ── Right: Stella_Assist chat panel ── */}
       <div className="flex-shrink-0" style={{ width: panelWidth }}>
-        <ChatPanel vehicleInfo={vehicleInfo} dtcs={dtcs} dtcLookup={dtcLookup} />
+        <ChatPanel vehicleInfo={vehicleInfo} dtcs={dtcs} dtcLookup={dtcLookup} ecus={mergedEcus} />
       </div>
 
     </div>
