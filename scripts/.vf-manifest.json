@@ -17,5 +17,12 @@
     "size": 1582080,
     "processedAt": "2026-05-01T14:55:42.444Z",
     "outputFile": "src/knowledge/auto/VF179_V14_R2_PEJ28.js"
+  },
+  "Consolidated DTC Matrix.xlsx::406754": {
+    "filename": "Consolidated DTC Matrix.xlsx",
+    "size": 406754,
+    "processedAt": "2026-05-01T21:13:23.731Z",
+    "outputFile": "src/data/dtc-auto/Consolidated_DTC_Matrix.js",
+    "dtcCount": 532
   }
 }
