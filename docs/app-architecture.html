@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Application Architecture</title>
+<style>
+  body {
+    margin: 0;
+    background: #ffffff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 32px 40px;
+  }
+  h1 { font-size: 16px; font-weight: 700; color: #243882; margin: 0 0 4px; }
+  .subtitle { font-size: 12px; color: #6b7280; margin: 0 0 28px; }
+  svg { display: block; width: 100%; max-width: 1080px; height: auto; }
+</style>
+</head>
+<body>
+
+<h1>Application Architecture</h1>
+<p class="subtitle">Diagnostic Intelligence Platform · Interconnected Block Diagram</p>
+
+<svg viewBox="0 0 1080 480" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0,8 3,0 6" fill="#6b7280"/>
+  </marker>
+  <marker id="arr-dash" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0,8 3,0 6" fill="#9ca3af"/>
+  </marker>
+</defs>
+
+<!-- ─────────────────────────────────────────────
+     ROW LABELS
+───────────────────────────────────────────── -->
+<text x="40"  y="20" font-size="9.5" fill="#9ca3af" font-weight="600" letter-spacing="1">DATA SOURCE</text>
+<text x="210" y="20" font-size="9.5" fill="#9ca3af" font-weight="600" letter-spacing="1">INGESTION</text>
+<text x="380" y="20" font-size="9.5" fill="#9ca3af" font-weight="600" letter-spacing="1">BUILD-TIME PROCESSING</text>
+<text x="616" y="20" font-size="9.5" fill="#9ca3af" font-weight="600" letter-spacing="1">CLIENT APPLICATION (SPA)</text>
+<text x="912" y="20" font-size="9.5" fill="#9ca3af" font-weight="600" letter-spacing="1">AI SERVICE</text>
+
+<!-- ─────────────────────────────────────────────
+     BLOCK 1 — Legacy OEM System
+───────────────────────────────────────────── -->
+<rect x="20" y="40" width="158" height="200" rx="8" fill="#f8fafc" stroke="#243882" stroke-width="1.5"/>
+<!-- header bar -->
+<rect x="20" y="40" width="158" height="26" rx="8" fill="#243882"/>
+<rect x="20" y="54" width="158" height="12" fill="#243882"/>
+<text x="99" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">Legacy OEM System</text>
+
+<!-- sub-item 1 -->
+<rect x="32" y="76" width="134" height="68" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="99" y="94" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">DTC Database</text>
+<text x="99" y="109" text-anchor="middle" font-size="8.5" fill="#4b5563">J2012 Fault Codes</text>
+<text x="99" y="122" text-anchor="middle" font-size="8.5" fill="#4b5563">Enable Conditions · Repair Actions</text>
+<text x="99" y="135" text-anchor="middle" font-size="8.5" fill="#4b5563">Self-Heal · Limp-In Data</text>
+
+<!-- sub-item 2 -->
+<rect x="32" y="154" width="134" height="68" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="99" y="172" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">ECU Software Registry</text>
+<text x="99" y="187" text-anchor="middle" font-size="8.5" fill="#4b5563">Part Numbers · SW Versions</text>
+<text x="99" y="200" text-anchor="middle" font-size="8.5" fill="#4b5563">Latest Baseline · DRE Refs</text>
+<text x="99" y="213" text-anchor="middle" font-size="8.5" fill="#4b5563">Compare Table Source</text>
+
+<!-- ─────────────────────────────────────────────
+     BLOCK 2 — REST Interface
+───────────────────────────────────────────── -->
+<rect x="204" y="76" width="148" height="130" rx="8" fill="#f8fafc" stroke="#243882" stroke-width="1.5"/>
+<rect x="204" y="76" width="148" height="26" rx="8" fill="#243882"/>
+<rect x="204" y="90" width="148" height="12" fill="#243882"/>
+<text x="278" y="94" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">REST Interface</text>
+
+<rect x="216" y="112" width="124" height="34" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="278" y="126" text-anchor="middle" font-size="9" font-weight="700" fill="#243882">POST /api/dtc/ingest</text>
+<text x="278" y="139" text-anchor="middle" font-size="8" fill="#6b7280">DTC table upload</text>
+
+<rect x="216" y="153" width="124" height="34" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="278" y="167" text-anchor="middle" font-size="9" font-weight="700" fill="#243882">POST /api/compare/ingest</text>
+<text x="278" y="180" text-anchor="middle" font-size="8" fill="#6b7280">Compare table upload</text>
+
+<!-- ─────────────────────────────────────────────
+     BLOCK 3 — Build-time Processing
+───────────────────────────────────────────── -->
+<rect x="378" y="40" width="200" height="260" rx="8" fill="#f8fafc" stroke="#243882" stroke-width="1.5"/>
+<rect x="378" y="40" width="200" height="26" rx="8" fill="#243882"/>
+<rect x="378" y="54" width="200" height="12" fill="#243882"/>
+<text x="478" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">Processing &amp; Storage</text>
+
+<rect x="390" y="76" width="176" height="56" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="478" y="94" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">DTC Lookup Parser</text>
+<text x="478" y="108" text-anchor="middle" font-size="8.5" fill="#4b5563">Multi-sheet XLSX · Auto column detect</text>
+<text x="478" y="121" text-anchor="middle" font-size="8.5" fill="#4b5563">J2012 key index · Validation</text>
+
+<rect x="390" y="140" width="176" height="56" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="478" y="158" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">Compare Table Parser</text>
+<text x="478" y="172" text-anchor="middle" font-size="8.5" fill="#4b5563">Latest PN / SW per ECU</text>
+<text x="478" y="185" text-anchor="middle" font-size="8.5" fill="#4b5563">DRE reference · Up-to-date flag</text>
+
+<rect x="390" y="204" width="176" height="56" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="478" y="222" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">VF Document Extractor</text>
+<text x="478" y="236" text-anchor="middle" font-size="8.5" fill="#4b5563">Doc text extraction (LLM)</text>
+<text x="478" y="249" text-anchor="middle" font-size="8.5" fill="#4b5563">Structured knowledge output</text>
+
+<!-- knowledge store -->
+<rect x="390" y="268" width="176" height="22" rx="4" fill="#243882"/>
+<text x="478" y="283" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Output: JS modules bundled into SPA at build</text>
+
+<!-- ─────────────────────────────────────────────
+     BLOCK 4 — Application SPA (large)
+───────────────────────────────────────────── -->
+<rect x="604" y="40" width="320" height="380" rx="8" fill="#f8fafc" stroke="#243882" stroke-width="2"/>
+<rect x="604" y="40" width="320" height="26" rx="8" fill="#243882"/>
+<rect x="604" y="54" width="320" height="12" fill="#243882"/>
+<text x="764" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">Application Core — Single-Page Application</text>
+
+<!-- VSR Upload -->
+<rect x="616" y="76" width="142" height="46" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="687" y="93" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">VSR Upload</text>
+<text x="687" y="107" text-anchor="middle" font-size="8.5" fill="#4b5563">File input · Triggers parse pipeline</text>
+<text x="687" y="118" text-anchor="middle" font-size="8" fill="#6b7280">→ VSR Processor Hook</text>
+
+<!-- Vehicle Info -->
+<rect x="770" y="76" width="142" height="46" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="841" y="93" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">Vehicle Info Card</text>
+<text x="841" y="107" text-anchor="middle" font-size="8.5" fill="#4b5563">VIN · Model Year · Body Code</text>
+<text x="841" y="118" text-anchor="middle" font-size="8" fill="#6b7280">Populated from parsed VSR</text>
+
+<!-- ECU Table -->
+<rect x="616" y="134" width="142" height="56" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="687" y="151" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">ECU Software Table</text>
+<text x="687" y="165" text-anchor="middle" font-size="8.5" fill="#4b5563">Current PN · SW Version</text>
+<text x="687" y="177" text-anchor="middle" font-size="8.5" fill="#4b5563">Baseline overlay · Up-to-date?</text>
+<text x="687" y="188" text-anchor="middle" font-size="8" fill="#6b7280">DRE reference</text>
+
+<!-- DTC View -->
+<rect x="770" y="134" width="142" height="56" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="841" y="151" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">DTC View</text>
+<text x="841" y="165" text-anchor="middle" font-size="8.5" fill="#4b5563">Fault codes · Status badge</text>
+<text x="841" y="177" text-anchor="middle" font-size="8.5" fill="#4b5563">Expand [+] — Enable Condition</text>
+<text x="841" y="188" text-anchor="middle" font-size="8" fill="#6b7280">Repair Action · Self-Heal · Limp-In</text>
+
+<!-- Global State -->
+<rect x="616" y="202" width="296" height="40" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="764" y="218" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">Global State (Context / Reducer)</text>
+<text x="764" y="232" text-anchor="middle" font-size="8.5" fill="#4b5563">Vehicle Info · ECU List · DTC List · DTC Lookup Map · Compare Data · Loading / Error State</text>
+
+<!-- Static Data Loader Hook -->
+<rect x="616" y="254" width="142" height="46" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="687" y="271" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">Static Data Loader</text>
+<text x="687" y="285" text-anchor="middle" font-size="8.5" fill="#4b5563">DTC lookup modules</text>
+<text x="687" y="296" text-anchor="middle" font-size="8" fill="#6b7280">Compare baseline files</text>
+
+<!-- Status Bar -->
+<rect x="770" y="254" width="142" height="46" rx="5" fill="#eef0f8" stroke="#c7d0f0" stroke-width="1"/>
+<text x="841" y="271" text-anchor="middle" font-size="9.5" font-weight="700" fill="#243882">Status Bar</text>
+<text x="841" y="285" text-anchor="middle" font-size="8.5" fill="#4b5563">Loading indicator</text>
+<text x="841" y="296" text-anchor="middle" font-size="8" fill="#6b7280">Error display · Dismiss</text>
+
+<!-- AI Chat Panel -->
+<rect x="616" y="312" width="296" height="94" rx="5" fill="#243882" stroke="#1e3270" stroke-width="1.5"/>
+<text x="764" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">AI Chat Panel</text>
+<text x="764" y="345" text-anchor="middle" font-size="8.5" fill="#c7d0f0">Streaming markdown message thread · Drag-to-resize</text>
+
+<rect x="628" y="354" width="128" height="42" rx="4" fill="#1e3270"/>
+<text x="692" y="370" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">AI Chat Hook</text>
+<text x="692" y="382" text-anchor="middle" font-size="8" fill="#c7d0f0">Message history · Streaming state</text>
+<text x="692" y="392" text-anchor="middle" font-size="8" fill="#9dacde">Abort controller · SSE handling</text>
+
+<rect x="776" y="354" width="128" height="42" rx="4" fill="#1e3270"/>
+<text x="840" y="370" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">System Prompt Builder</text>
+<text x="840" y="382" text-anchor="middle" font-size="8" fill="#c7d0f0">Vehicle + DTCs + ECUs context</text>
+<text x="840" y="392" text-anchor="middle" font-size="8" fill="#9dacde">VF knowledge injection</text>
+
+<!-- ─────────────────────────────────────────────
+     BLOCK 5 — LLM Inference API
+───────────────────────────────────────────── -->
+<rect x="952" y="120" width="112" height="140" rx="8" fill="#f8fafc" stroke="#243882" stroke-width="1.5"/>
+<rect x="952" y="120" width="112" height="26" rx="8" fill="#243882"/>
+<rect x="952" y="134" width="112" height="12" fill="#243882"/>
+<text x="1008" y="138" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">LLM API</text>
+<text x="1008" y="162" text-anchor="middle" font-size="9" fill="#374151">Large Language Model</text>
+<text x="1008" y="176" text-anchor="middle" font-size="9" fill="#374151">REST · Streaming SSE</text>
+<text x="1008" y="190" text-anchor="middle" font-size="9" fill="#374151">Authenticated</text>
+<text x="1008" y="204" text-anchor="middle" font-size="9" fill="#374151">Rate-limited</text>
+<text x="1008" y="218" text-anchor="middle" font-size="9" fill="#374151">Context window</text>
+<text x="1008" y="232" text-anchor="middle" font-size="9" fill="#374151">management</text>
+
+<!-- ─────────────────────────────────────────────
+     END USER
+───────────────────────────────────────────── -->
+<rect x="674" y="440" width="180" height="32" rx="8" fill="#f8fafc" stroke="#243882" stroke-width="1.5"/>
+<text x="764" y="461" text-anchor="middle" font-size="10" font-weight="600" fill="#243882">End User (Technician / Engineer)</text>
+
+<!-- ─────────────────────────────────────────────
+     ARROWS
+───────────────────────────────────────────── -->
+
+<!-- OEM → REST (DTC) -->
+<line x1="178" y1="110" x2="200" y2="129" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+<text x="182" y="116" font-size="8" fill="#6b7280">REST</text>
+
+<!-- OEM → REST (Compare) -->
+<line x1="178" y1="170" x2="200" y2="161" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+<text x="181" y="168" font-size="8" fill="#6b7280">REST</text>
+
+<!-- REST → Processing -->
+<line x1="352" y1="141" x2="375" y2="141" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+<!-- Processing → SPA (bundled at build-time) — dashed -->
+<line x1="578" y1="168" x2="600" y2="168" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-dash)"/>
+<rect x="564" y="155" width="52" height="14" rx="3" fill="#9ca3af"/>
+<text x="590" y="165" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="700">build-time</text>
+
+<!-- SPA → LLM (request) -->
+<line x1="924" y1="358" x2="949" y2="230" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+<text x="932" y="300" font-size="8" fill="#6b7280">REST</text>
+
+<!-- LLM → SPA (SSE response) — dashed -->
+<line x1="952" y1="220" x2="924" y2="370" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-dash)"/>
+<text x="943" y="330" font-size="8" fill="#9ca3af">SSE</text>
+
+<!-- User → SPA -->
+<line x1="764" y1="440" x2="764" y2="425" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+</svg>
+
+<!-- Legend -->
+<div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:18px; font-size:11px; color:#374151; align-items:center;">
+  <div style="display:flex; align-items:center; gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#243882;flex-shrink:0;"></div>Block header / Primary element</div>
+  <div style="display:flex; align-items:center; gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#eef0f8;border:1px solid #c7d0f0;flex-shrink:0;"></div>Component / Sub-element</div>
+  <div style="display:flex; align-items:center; gap:6px;"><div style="width:28px;height:0;border-top:2px solid #6b7280;flex-shrink:0;"></div>Live data / API call</div>
+  <div style="display:flex; align-items:center; gap:6px;"><div style="width:28px;height:0;border-top:2px dashed #9ca3af;flex-shrink:0;"></div>Build-time / internal</div>
+</div>
+
+</body>
+</html>

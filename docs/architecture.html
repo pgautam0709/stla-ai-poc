@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>DTC Genie — High-Level Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; padding: 32px; }
+
+  h1 { color: #243882; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #6b7280; font-size: 13px; margin-bottom: 28px; }
+
+  /* ── Lane layout ── */
+  .diagram { display: flex; flex-direction: column; gap: 0; }
+
+  .lane {
+    display: flex;
+    align-items: stretch;
+    border-radius: 0;
+    overflow: visible;
+    position: relative;
+  }
+
+  .lane-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 12px 8px;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px 0 0 8px;
+    flex-shrink: 0;
+  }
+
+  .lane-body {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-radius: 0 8px 8px 0;
+    min-height: 90px;
+    position: relative;
+  }
+
+  /* Lane colours */
+  .lane-oem   .lane-label { background: #7c3aed; color: #fff; }
+  .lane-oem   .lane-body  { background: #f5f3ff; border: 2px solid #ddd6fe; }
+
+  .lane-api   .lane-label { background: #0369a1; color: #fff; }
+  .lane-api   .lane-body  { background: #f0f9ff; border: 2px solid #bae6fd; border-top: none; }
+
+  .lane-proc  .lane-label { background: #b45309; color: #fff; }
+  .lane-proc  .lane-body  { background: #fffbeb; border: 2px solid #fde68a; border-top: none; }
+
+  .lane-repo  .lane-label { background: #374151; color: #fff; }
+  .lane-repo  .lane-body  { background: #f9fafb; border: 2px solid #d1d5db; border-top: none; }
+
+  .lane-azure .lane-label { background: #243882; color: #fff; }
+  .lane-azure .lane-body  { background: #eef0f8; border: 2px solid #c7d0f0; border-top: none; border-radius: 0 8px 8px 0; }
+
+  .lane-user  .lane-label { background: #065f46; color: #fff; border-radius: 0 0 0 8px; }
+  .lane-user  .lane-body  { background: #ecfdf5; border: 2px solid #a7f3d0; border-top: none; border-radius: 0 8px 8px 8px; }
+
+  /* ── Boxes ── */
+  .box {
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    position: relative;
+    min-width: 130px;
+    text-align: center;
+  }
+
+  .box-title { font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+  .box-sub   { font-size: 10px; opacity: 0.75; line-height: 1.4; }
+
+  .box-db {
+    background: #7c3aed; color: #fff;
+    border: 2px solid #6d28d9;
+    border-radius: 8px;
+  }
+  .box-api {
+    background: #0369a1; color: #fff;
+    border: 2px solid #0284c7;
+  }
+  .box-auth {
+    background: #fff; color: #0369a1;
+    border: 2px dashed #7dd3fc;
+  }
+  .box-proc {
+    background: #d97706; color: #fff;
+    border: 2px solid #b45309;
+  }
+  .box-git {
+    background: #1f2937; color: #fff;
+    border: 2px solid #374151;
+  }
+  .box-swa {
+    background: #243882; color: #fff;
+    border: 2px solid #1e3270;
+  }
+  .box-ai {
+    background: #4f46e5; color: #fff;
+    border: 2px solid #4338ca;
+  }
+  .box-user {
+    background: #065f46; color: #fff;
+    border: 2px solid #047857;
+  }
+  .box-neutral {
+    background: #fff; color: #374151;
+    border: 2px solid #d1d5db;
+  }
+
+  /* ── Arrows ── */
+  .arrow-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 52px;
+    gap: 0;
+    height: 28px;
+    position: relative;
+  }
+
+  .arrow-down {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    position: absolute;
+  }
+
+  .arrow-label {
+    font-size: 9px;
+    color: #6b7280;
+    white-space: nowrap;
+    background: #f0f2f8;
+    padding: 0 4px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  /* SVG arrows layer */
+  .arrows-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .connector {
+    fill: none;
+    stroke: #9ca3af;
+    stroke-width: 1.5;
+    stroke-dasharray: 5 3;
+    marker-end: url(#arrowhead);
+  }
+  .connector-solid {
+    fill: none;
+    stroke: #6366f1;
+    stroke-width: 2;
+    marker-end: url(#arrowhead-indigo);
+  }
+
+  /* ── Flow arrows between lanes (vertical) ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    padding-left: 52px;
+    height: 24px;
+    gap: 8px;
+  }
+  .flow-line {
+    width: 2px;
+    height: 24px;
+    background: #9ca3af;
+    margin-left: 65px;
+    position: relative;
+  }
+  .flow-line::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: -4px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #9ca3af;
+  }
+  .flow-tag {
+    font-size: 10px;
+    color: #6b7280;
+    font-weight: 600;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+
+  /* ── Horizontal arrow between boxes ── */
+  .h-arrow {
+    display: flex;
+    align-items: center;
+    color: #9ca3af;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .h-arrow-label {
+    font-size: 9px;
+    color: #6b7280;
+    writing-mode: horizontal-tb;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .between {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 2px;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    margin-top: 24px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #374151;
+  }
+  .legend-line {
+    width: 28px;
+    height: 2px;
+  }
+  .legend-solid { background: #6366f1; }
+  .legend-dashed {
+    background: transparent;
+    border-top: 2px dashed #9ca3af;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 10px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .badge-rest { background: #dbeafe; color: #1d4ed8; }
+  .badge-ci   { background: #dcfce7; color: #166534; }
+  .badge-build{ background: #fef3c7; color: #92400e; }
+
+  .logos {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .logo-stellantis {
+    background: #243882;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .logo-cognizant {
+    color: #1C4DA1;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .divider-v {
+    width: 1px; height: 20px; background: #d1d5db;
+  }
+
+  .note {
+    margin-top: 20px;
+    background: #fff;
+    border-left: 3px solid #243882;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 11px;
+    color: #374151;
+    line-height: 1.6;
+  }
+  .note strong { color: #243882; }
+</style>
+</head>
+<body>
+
+<div class="logos">
+  <span class="logo-stellantis">STELLANTIS</span>
+  <div class="divider-v"></div>
+  <span class="logo-cognizant">cognizant</span>
+</div>
+
+<h1>DTC Genie — High-Level Architecture</h1>
+<p class="subtitle">Abstracted DTC &amp; Compare Table ingestion from Legacy OEM Systems via REST · AI-powered Diagnostic Intelligence Platform</p>
+
+<div class="diagram">
+
+  <!-- ── Lane 1: Legacy OEM ── -->
+  <div class="lane lane-oem">
+    <div class="lane-label">Legacy OEM</div>
+    <div class="lane-body">
+      <div class="box box-db">
+        <div class="box-title">🗄 DTC Database</div>
+        <div class="box-sub">J2012 Codes · Enable Conditions<br/>Repair Actions · Self-Heal Criteria<br/>Per ECU / Per Platform</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+        <div class="h-arrow-label">scheduled<br/>export</div>
+      </div>
+      <div class="box box-db">
+        <div class="box-title">🗄 ECU Software Registry</div>
+        <div class="box-sub">Part Numbers · SW Versions<br/>DRE References · Latest Baselines<br/>Compare Table Source</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow arrow -->
+  <div class="flow">
+    <div class="flow-line"></div>
+    <span class="flow-tag">REST POST · HTTPS · API Key / OAuth 2.0</span>
+  </div>
+
+  <!-- ── Lane 2: Ingestion API ── -->
+  <div class="lane lane-api">
+    <div class="lane-label">Ingestion API</div>
+    <div class="lane-body">
+      <div class="box box-auth">
+        <div class="box-title">🔐 Auth Gateway</div>
+        <div class="box-sub">API Key validation<br/>Rate limiting<br/>Request logging</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+      </div>
+      <div class="box box-api">
+        <div class="box-title">⚡ REST Endpoints</div>
+        <div class="box-sub">
+          POST /api/dtc/ingest<br/>
+          POST /api/compare/ingest<br/>
+          GET  /api/status
+        </div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+        <div class="h-arrow-label">validates<br/>+ stores</div>
+      </div>
+      <div class="box box-neutral">
+        <div class="box-title">☁️ Azure Blob Storage</div>
+        <div class="box-sub">public/DTCs/*.xlsx<br/>public/CompareTable.xlsx<br/>Versioned · Immutable</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+        <div class="h-arrow-label">triggers via<br/>GitHub API</div>
+      </div>
+      <div class="box box-neutral">
+        <div class="box-title">🔔 Webhook Trigger</div>
+        <div class="box-sub">GitHub Dispatch Event<br/>on new file arrival<br/>starts CI pipeline</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow arrow -->
+  <div class="flow">
+    <div class="flow-line"></div>
+    <span class="flow-tag">CI/CD pipeline triggered automatically</span>
+  </div>
+
+  <!-- ── Lane 3: Processing ── -->
+  <div class="lane lane-proc">
+    <div class="lane-label">Processing</div>
+    <div class="lane-body">
+      <div class="box box-proc">
+        <div class="box-title">⚙️ DTC Processor</div>
+        <div class="box-sub">Auto-detects column layout<br/>Parses multi-sheet XLSX<br/>Validates J2012 codes</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+      </div>
+      <div class="box box-proc">
+        <div class="box-title">🤖 VF Doc Extractor</div>
+        <div class="box-sub">mammoth / word-extractor<br/>Azure OpenAI extraction<br/>Structured knowledge output</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+      </div>
+      <div class="box box-proc">
+        <div class="box-title">📦 Compare Parser</div>
+        <div class="box-sub">ECU latest PN / SW<br/>DRE mapping<br/>Up-to-date analysis</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+        <div class="h-arrow-label">writes<br/>JS modules</div>
+      </div>
+      <div class="box box-neutral">
+        <div class="box-title">📁 Generated Modules</div>
+        <div class="box-sub">src/data/dtc-auto/*.js<br/>src/knowledge/auto/*.js<br/>Pre-baked for Vite</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow arrow -->
+  <div class="flow">
+    <div class="flow-line"></div>
+    <span class="flow-tag">committed to GitHub · npm run build bundles modules into JS</span>
+  </div>
+
+  <!-- ── Lane 4: GitHub ── -->
+  <div class="lane lane-repo">
+    <div class="lane-label">GitHub</div>
+    <div class="lane-body">
+      <div class="box box-git">
+        <div class="box-title">🐙 Repository</div>
+        <div class="box-sub">pgautam0709/stla-ai-poc<br/>main branch</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+        <div class="h-arrow-label">push triggers</div>
+      </div>
+      <div class="box box-git">
+        <div class="box-title">⚙️ GitHub Actions</div>
+        <div class="box-sub">azure-static-web-apps CI<br/>npm run build<br/>Injects VITE_* secrets</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+        <div class="h-arrow-label">deploys dist/</div>
+      </div>
+      <div class="box box-swa">
+        <div class="box-title">☁️ Azure Static Web Apps</div>
+        <div class="box-sub">gentle-desert-0d7be4510<br/>Global CDN · Free tier<br/>staticwebapp.config.json</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow arrow -->
+  <div class="flow">
+    <div class="flow-line"></div>
+    <span class="flow-tag">served globally via Azure CDN</span>
+  </div>
+
+  <!-- ── Lane 5: App ── -->
+  <div class="lane lane-azure">
+    <div class="lane-label">DTC Genie App</div>
+    <div class="lane-body">
+      <div class="box box-swa">
+        <div class="box-title">📋 DTC View</div>
+        <div class="box-sub">VSR parsed in-browser<br/>Lookup from bundled JS<br/>Expand → enable / repair</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow" style="color:#818cf8">⟷</div>
+      </div>
+      <div class="box box-ai">
+        <div class="box-title">🤖 Stella_Assist</div>
+        <div class="box-sub">Azure OpenAI GPT-4o<br/>DTC + VF knowledge<br/>Streaming chat · SSE</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow" style="color:#818cf8">⟷</div>
+      </div>
+      <div class="box box-swa">
+        <div class="box-title">🔧 ECU Software Table</div>
+        <div class="box-sub">Compare Table overlay<br/>Up-to-date? YES / NO<br/>DRE reference</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow" style="color:#818cf8">⟷</div>
+      </div>
+      <div class="box box-swa">
+        <div class="box-title">📤 VSR Upload</div>
+        <div class="box-sub">HTML parsed client-side<br/>VIN · ECUs · DTCs<br/>No server needed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow arrow -->
+  <div class="flow">
+    <div class="flow-line"></div>
+    <span class="flow-tag">technician interaction</span>
+  </div>
+
+  <!-- ── Lane 6: User ── -->
+  <div class="lane lane-user">
+    <div class="lane-label">End User</div>
+    <div class="lane-body">
+      <div class="box box-user">
+        <div class="box-title">🧑‍🔧 Technician / Engineer</div>
+        <div class="box-sub">Uploads VSR report<br/>Asks Stella_Assist questions<br/>Reviews DTC diagnostics</div>
+      </div>
+      <div class="between">
+        <div class="h-arrow">→</div>
+        <div class="h-arrow-label">browser<br/>HTTPS</div>
+      </div>
+      <div class="box box-user">
+        <div class="box-title">🌐 Web Browser</div>
+        <div class="box-sub">gentle-desert-0d7be4510<br/>.azurestaticapps.net<br/>React SPA · Vite bundle</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /diagram -->
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-line legend-solid"></div>
+    <span>Data / control flow</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-line legend-dashed"></div>
+    <span>Async / indirect trigger</span>
+  </div>
+  <div class="legend-item">
+    <span class="badge badge-rest">REST</span> HTTPS POST with API Key or OAuth 2.0
+  </div>
+  <div class="legend-item">
+    <span class="badge badge-ci">CI/CD</span> GitHub Actions on every push to main
+  </div>
+  <div class="legend-item">
+    <span class="badge badge-build">Build-time</span> VITE_* env vars baked into JS bundle
+  </div>
+</div>
+
+<div class="note">
+  <strong>Key design principle:</strong> All DTC and Compare table data is <strong>pre-processed at build time</strong> into static JS modules.
+  The deployed app has zero server-side dependencies — it is a pure static SPA served from Azure CDN.
+  The REST ingestion layer feeds a CI/CD pipeline; the pipeline output is a rebuilt, redeployed bundle.
+  <br/><br/>
+  <strong>Abstraction boundary:</strong> Legacy OEM systems never call the frontend directly.
+  All data enters through the REST ingestion API, which normalises, validates, and stores files before triggering the processing pipeline.
+</div>
+
+</body>
+</html>
