@@ -36,6 +36,7 @@ jobs:
           app_location: "/" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "dist" # Built app content directory - optional
+          node_version: "20"  # Pin to Node 20 LTS — Oryx CDN doesn't always carry latest 22.x
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
