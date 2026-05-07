@@ -56,13 +56,13 @@ function ThinkingDots() {
           key={i}
           className="w-2 h-2 rounded-full bg-blue-400"
           style={{
-            animation: 'stellaFloat 1.4s ease-in-out infinite',
+            animation: 'genieFloat 1.4s ease-in-out infinite',
             animationDelay: `${i * 0.2}s`,
           }}
         />
       ))}
       <style>{`
-        @keyframes stellaFloat {
+        @keyframes genieFloat {
           0%, 100% { transform: translateY(0); opacity: 0.4; }
           50%       { transform: translateY(-6px); opacity: 1; }
         }
@@ -157,10 +157,10 @@ function AssistantMessage({ content, isLast, isStreaming }) {
   return (
     <div className="flex gap-3 mb-6 group">
       <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm overflow-hidden">
-        <span className="text-white text-[9px] font-bold tracking-tight leading-none">SA</span>
+        <span className="text-white text-[9px] font-bold tracking-tight leading-none">DG</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold text-blue-700 mb-1.5 uppercase tracking-wide">Stella_Assist</p>
+        <p className="text-[11px] font-semibold text-blue-700 mb-1.5 uppercase tracking-wide">DTC Genie</p>
         <div className="text-sm text-gray-800 leading-relaxed">
           {showThinking ? (
             <ThinkingDots />
@@ -222,9 +222,9 @@ function EmptyState({ dtcCount, hasVehicle, onSuggest }) {
     <div className="py-6 px-2">
       <div className="text-center mb-6">
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center mx-auto mb-3 shadow-md">
-          <span className="text-white text-sm font-bold tracking-tight">SA</span>
+          <span className="text-white text-sm font-bold tracking-tight">DG</span>
         </div>
-        <p className="font-semibold text-gray-800 text-sm">Stella_Assist</p>
+        <p className="font-semibold text-gray-800 text-sm">DTC Genie</p>
         <p className="text-xs text-gray-400 mt-1">
           {hasVehicle
             ? `${dtcCount} fault code${dtcCount !== 1 ? 's' : ''} loaded — ready to assist`
@@ -333,7 +333,7 @@ export default function ChatPanel({ vehicleInfo, dtcs, dtcLookup, ecus }) {
           />
           <div className="w-px h-6 bg-white/20" />
           <div>
-            <p className="text-white font-semibold text-sm leading-tight">Stella_Assist</p>
+            <p className="text-white font-semibold text-sm leading-tight">DTC Genie</p>
             <p className="text-blue-200 text-[11px] leading-tight">
               {hasVehicle ? `VIN: ${vehicleInfo.vin}` : 'Chrysler · Dodge · Jeep · Ram'}
             </p>

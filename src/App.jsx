@@ -22,7 +22,7 @@ const PANEL_DEFAULT = 420;
 
 export default function App() {
   const { state, dispatch } = useDiagnostic();
-  const { vehicleInfo, ecus, compareData, dtcs, dtcLookup, vsrFileName, loading, error } = state;
+  const { vehicleInfo, ecus, compareData, dreData, dtcs, dtcLookup, vsrFileName, loading, error } = state;
 
   const [activeTab, setActiveTab] = useState('ecu');
   const [panelWidth, setPanelWidth] = useState(PANEL_DEFAULT);
@@ -59,15 +59,18 @@ export default function App() {
 
   const mergedEcus = useMemo(() => {
     return ecus.map((ecu) => {
-      const match = compareData[ecu.ecuName.toUpperCase()] ?? {};
+      const key   = ecu.ecuName.toUpperCase();
+      const match = compareData[key] ?? {};
+      // DRE: prefer value from CompareTable; fall back to DRE Names lookup
+      const dre = match.dre || dreData[key] || '';
       return {
         ...ecu,
         latestPartNumber: match.latestPartNumber ?? '',
         latestSwVersion:  match.latestSwVersion  ?? '',
-        dre:              match.dre               ?? '',
+        dre,
       };
     });
-  }, [ecus, compareData]);
+  }, [ecus, compareData, dreData]);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -128,7 +131,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── Right: Stella_Assist chat panel ── */}
+      {/* ── Right: DTC Genie chat panel ── */}
       <div className="flex-shrink-0" style={{ width: panelWidth }}>
         <ChatPanel vehicleInfo={vehicleInfo} dtcs={dtcs} dtcLookup={dtcLookup} ecus={mergedEcus} />
       </div>

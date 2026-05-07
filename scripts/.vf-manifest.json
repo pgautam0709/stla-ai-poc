@@ -24,5 +24,12 @@
     "processedAt": "2026-05-01T21:13:23.731Z",
     "outputFile": "src/data/dtc-auto/Consolidated_DTC_Matrix.js",
     "dtcCount": 532
+  },
+  "DRE Names.xlsx::8837": {
+    "filename": "DRE Names.xlsx",
+    "size": 8837,
+    "processedAt": "2026-05-07T20:46:48.697Z",
+    "outputFile": "src/data/dre-auto/DRE_Names.js",
+    "dreCount": 34
   }
 }

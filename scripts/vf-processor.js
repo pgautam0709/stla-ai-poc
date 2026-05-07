@@ -42,10 +42,11 @@ const VFS_DIR       = join(PUBLIC_DIR, 'VFs');
 const DTCS_DIR      = join(PUBLIC_DIR, 'DTCs');
 const VF_AUTO_DIR   = join(PROJECT_ROOT, 'src', 'knowledge', 'auto');
 const DTC_AUTO_DIR  = join(PROJECT_ROOT, 'src', 'data', 'dtc-auto');
+const DRE_AUTO_DIR  = join(PROJECT_ROOT, 'src', 'data', 'dre-auto');
 const MANIFEST_FILE = join(__dirname, '.vf-manifest.json');
 
 // Ensure input and output dirs exist
-[VFS_DIR, DTCS_DIR, VF_AUTO_DIR, DTC_AUTO_DIR].forEach(dir => {
+[VFS_DIR, DTCS_DIR, VF_AUTO_DIR, DTC_AUTO_DIR, DRE_AUTO_DIR].forEach(dir => {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 });
 
@@ -245,6 +246,129 @@ async function processDtcFile(filePath) {
   }
 }
 
+// ─── DRE Names xlsx handling ──────────────────────────────────────────────────
+
+/**
+ * Matches files whose name contains "DRE" (case-insensitive) and ends with .xlsx.
+ * Examples: DRE Names.xlsx, DRE_Names.xlsx, DREnames.xlsx
+ */
+function isDreFile(filename) {
+  return /dre/i.test(filename) && filename.toLowerCase().endsWith('.xlsx');
+}
+
+/**
+ * Parses a DRE Names Excel file.
+ * Flexible column detection: looks for ECU and DRE/name columns by header keyword.
+ * Falls back to col 0 = ECU, col 1 = DRE name if headers are not recognised.
+ *
+ * Returns: { [ECU_NAME_UPPERCASE]: "DRE Person Name" }
+ */
+function parseDreNamesXlsx(filePath) {
+  const workbook = XLSX.readFile(filePath);
+  const lookup   = {};
+
+  // Only read the first sheet — DRE Names files are typically single-sheet
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) return lookup;
+
+  const sheet = workbook.Sheets[sheetName];
+  const rows  = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+  if (!rows || rows.length < 2) return lookup;
+
+  const headers = rows[0].map(h => String(h || '').toLowerCase().trim());
+
+  const ecuIdx = headers.findIndex(
+    h => h.includes('ecu') || h.includes('module') || h.includes('system')
+  );
+  const dreIdx = headers.findIndex(
+    h => h.includes('dre') || h.includes('name') || h.includes('owner') || h.includes('contact')
+  );
+
+  const resolvedEcuIdx = ecuIdx >= 0 ? ecuIdx : 0;
+  const resolvedDreIdx = dreIdx >= 0 ? dreIdx : (resolvedEcuIdx === 0 ? 1 : 0);
+
+  // Keyword sets used during header detection — skip any row whose ECU cell
+  // matches a header keyword (handles files with a second/duplicate header row).
+  const headerKeywords = new Set(['ECU', 'MODULE', 'SYSTEM', 'DRE', 'NAME', 'OWNER', 'CONTACT']);
+
+  let count = 0;
+  for (let i = 1; i < rows.length; i++) {
+    const row    = rows[i];
+    const ecuRaw = row?.[resolvedEcuIdx];
+    if (!ecuRaw) continue;
+    const ecu = String(ecuRaw).trim().toUpperCase();
+    if (!ecu || headerKeywords.has(ecu)) continue;  // skip residual header rows
+    lookup[ecu] = String(row[resolvedDreIdx] ?? '').trim();
+    count++;
+  }
+
+  console.log(`   👤 Sheet "${sheetName}": ${count} DRE entries`);
+  return lookup;
+}
+
+function writeDreModule(filename, lookup) {
+  const safeName   = safeModuleName(filename);
+  const outputPath = join(DRE_AUTO_DIR, `${safeName}.js`);
+  const date       = new Date().toISOString().split('T')[0];
+  const count      = Object.keys(lookup).length;
+
+  const content =
+    `// Auto-generated from ${filename} on ${date}\n` +
+    `// ${count} ECU → DRE name entries — re-run \`npm run process-vf\` to regenerate\n` +
+    `export default ${JSON.stringify(lookup, null, 2)};\n`;
+
+  writeFileSync(outputPath, content, 'utf8');
+  return outputPath;
+}
+
+async function processDreFile(filePath) {
+  const filename = basename(filePath);
+
+  let size;
+  try {
+    size = statSync(filePath).size;
+  } catch {
+    console.error(`  Could not stat ${filename}, skipping.`);
+    return;
+  }
+
+  const manifest = loadManifest();
+  const key      = manifestKey(filename, size);
+
+  if (manifest[key]) {
+    console.log(`⚠️  Already processed: ${filename} (skipped)`);
+    return;
+  }
+
+  console.log(`👤 Processing DRE Names file: ${filename}`);
+
+  try {
+    const lookup = parseDreNamesXlsx(filePath);
+    const count  = Object.keys(lookup).length;
+
+    if (count === 0) {
+      throw new Error('No DRE entries found — file must have columns identifiable as ECU and DRE/name.');
+    }
+
+    const outputPath = writeDreModule(filename, lookup);
+    const relOutput  = outputPath.replace(PROJECT_ROOT + '/', '');
+
+    manifest[key] = {
+      filename,
+      size,
+      processedAt: new Date().toISOString(),
+      outputFile:  relOutput,
+      dreCount:    count,
+    };
+    saveManifest(manifest);
+
+    console.log(`✅ Done: ${filename} → ${relOutput} (${count} entries)`);
+  } catch (err) {
+    console.error(`❌ Error processing DRE file ${filename}: ${err.message}`);
+  }
+}
+
 // ─── VF doc (.doc / .docx) handling ──────────────────────────────────────────
 
 async function extractText(filePath) {
@@ -406,22 +530,28 @@ async function processFile(filePath) {
     return processDtcFile(filePath);
   }
 
+  if (isDreFile(filename)) {
+    return processDreFile(filePath);
+  }
+
   // Silently ignore other files (images, PDFs, etc.)
 }
 
 // ─── Startup scan + watcher ───────────────────────────────────────────────────
 
-console.log('🔍 Watching public/VFs and public/DTCs...');
+console.log('🔍 Watching public/, public/VFs and public/DTCs...');
 console.log(`   public/VFs/  → ${VF_AUTO_DIR}`);
 console.log(`   public/DTCs/ → ${DTC_AUTO_DIR}`);
+console.log(`   public/      → ${DRE_AUTO_DIR}  (DRE Names files)`);
 console.log(`   Manifest     : ${MANIFEST_FILE}`);
 console.log('');
 console.log('   Drop files here:');
 console.log('     📄 public/VFs/   — .doc / .docx  → VF knowledge modules (LLM extraction)');
 console.log('     📊 public/DTCs/  — DTC*.xlsx     → DTC lookup modules (direct parse)');
+console.log('     👤 public/       — DRE*.xlsx     → DRE name lookup modules (direct parse)');
 console.log('');
 
-const watcher = chokidar.watch([VFS_DIR, DTCS_DIR], {
+const watcher = chokidar.watch([VFS_DIR, DTCS_DIR, PUBLIC_DIR], {
   persistent: true,
   ignoreInitial: false,   // process existing files on startup
   awaitWriteFinish: {

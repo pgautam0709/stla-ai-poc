@@ -106,7 +106,7 @@ function formatDTCContext(matches) {
 export function useAzureChat({ vehicleInfo, dtcs, dtcLookup, ecus }) {
   const [messages, setMessages] = useState([{
     role: 'assistant',
-    content: `Hello! I'm **Stella_Assist**, your dedicated Chrysler/Stellantis diagnostic expert.
+    content: `Hello! I'm **DTC Genie**, your dedicated Chrysler/Stellantis diagnostic expert.
 
 I can help you with:
 - Understanding and diagnosing fault codes (DTCs)

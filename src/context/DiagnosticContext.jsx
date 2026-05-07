@@ -5,6 +5,7 @@ const initialState = {
   vehicleInfo: null,
   ecus: [],
   compareData: {},
+  dreData: {},        // ECU_NAME → DRE person name (from DRE Names.xlsx)
   dtcs: [],
   dtcLookup: {},
   vsrFileName: '',
@@ -19,6 +20,7 @@ export const ACTIONS = {
   SET_VEHICLE_INFO: 'SET_VEHICLE_INFO',
   SET_ECUS: 'SET_ECUS',
   SET_COMPARE_DATA: 'SET_COMPARE_DATA',
+  SET_DRE_DATA: 'SET_DRE_DATA',
   SET_DTCS: 'SET_DTCS',
   SET_DTC_LOOKUP: 'SET_DTC_LOOKUP',
   MERGE_DTC_LOOKUP: 'MERGE_DTC_LOOKUP',
@@ -40,6 +42,8 @@ function diagnosticReducer(state, action) {
       return { ...state, ecus: action.payload };
     case ACTIONS.SET_COMPARE_DATA:
       return { ...state, compareData: action.payload };
+    case ACTIONS.SET_DRE_DATA:
+      return { ...state, dreData: action.payload };
     case ACTIONS.SET_DTCS:
       return { ...state, dtcs: action.payload };
     case ACTIONS.SET_DTC_LOOKUP:
