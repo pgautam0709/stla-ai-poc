@@ -31,5 +31,11 @@
     "processedAt": "2026-05-07T20:46:48.697Z",
     "outputFile": "src/data/dre-auto/DRE_Names.js",
     "dreCount": 34
+  },
+  "VF505_V5_R2_PEJ28.doc::16231424": {
+    "filename": "VF505_V5_R2_PEJ28.doc",
+    "size": 16231424,
+    "processedAt": "2026-05-07T21:07:43.317Z",
+    "outputFile": "src/knowledge/auto/VF505_V5_R2_PEJ28.js"
   }
 }
